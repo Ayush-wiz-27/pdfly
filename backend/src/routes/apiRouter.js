@@ -1,5 +1,4 @@
 import express from 'express';
-import { updateDbConfig } from '../controllers/configController.js';
 import { getDocuments, destroyDocument } from '../controllers/documentController.js';
 import { uploadPdf } from '../controllers/uploadPdfController.js';
 import { getChatHistory, wipeChatHistory, queryRag } from '../controllers/chatController.js';
@@ -16,9 +15,6 @@ apiRouter.post('/auth/login', login);
 
 // 2. Register authentication middleware to protect all routes below
 apiRouter.use(authenticate);
-
-// Database Configuration Endpoint
-apiRouter.post('/config/db', updateDbConfig);
 
 // Document Endpoints
 apiRouter.get('/documents', getDocuments);
