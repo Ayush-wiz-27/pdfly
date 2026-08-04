@@ -7,7 +7,12 @@ import { hashPassword } from '../services/authService.js';
  */
 export async function signup(req, res) {
   const { username, password } = req.body;
-  const jwtSecret = process.env.JWT_SECRET || 'pdfly_default_secret_jwt_key_2026';
+  const jwtSecret = process.env.JWT_SECRET;
+
+  if (!jwtSecret) {
+    console.error('FATAL: JWT_SECRET is missing in server environment.');
+    return res.status(500).json({ error: 'Server configuration error: Authentication key is missing.' });
+  }
 
   if (!username || !password) {
     return res.status(400).json({ error: 'Username and password are required.' });
@@ -50,7 +55,12 @@ export async function signup(req, res) {
  */
 export async function login(req, res) {
   const { username, password } = req.body;
-  const jwtSecret = process.env.JWT_SECRET || 'pdfly_default_secret_jwt_key_2026';
+  const jwtSecret = process.env.JWT_SECRET;
+
+  if (!jwtSecret) {
+    console.error('FATAL: JWT_SECRET is missing in server environment.');
+    return res.status(500).json({ error: 'Server configuration error.' });
+  }
 
   if (!username || !password) {
     return res.status(400).json({ error: 'Username and password are required.' });

@@ -5,7 +5,12 @@ import jwt from 'jsonwebtoken';
  * Enforces JWT token validation strictly using the env configured JWT_SECRET.
  */
 export function authenticate(req, res, next) {
-  const jwtSecret = process.env.JWT_SECRET || 'pdfly_default_secret_jwt_key_2026';
+  const jwtSecret = process.env.JWT_SECRET;
+
+  if (!jwtSecret) {
+    console.error('FATAL: JWT_SECRET is not configured in the server environment.');
+    return res.status(500).json({ error: 'Server configuration error: Authentication key is missing.' });
+  }
 
   const authHeader = req.headers.authorization;
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
