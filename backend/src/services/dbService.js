@@ -40,9 +40,75 @@ export async function testAndSetupDB() {
   const client = await pool.connect();
   try {
     console.log('Successfully connected to PostgreSQL. Setting up database tables...');
-    const initSqlPath = path.join(__dirname, '..', 'db', 'init.sql');
-    const initSql = fs.readFileSync(initSqlPath, 'utf8');
-    await client.query(initSql);
+    
+    // 1. Vector extension (optional/graceful)
+    try {
+      await client.query('CREATE EXTENSION IF NOT EXISTS vector;');
+    } catch (vErr) {
+      console.warn('pgvector extension warning:', vErr.message);
+    }
+
+    // 2. Users table
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS users (
+          id SERIAL PRIMARY KEY,
+          username TEXT UNIQUE NOT NULL,
+          password_hash TEXT NOT NULL,
+          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+    `);
+
+    // 3. Documents table
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS documents (
+          id SERIAL PRIMARY KEY,
+          filename TEXT NOT NULL,
+          char_count INT DEFAULT 0,
+          chunk_count INT DEFAULT 0,
+          uploaded_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          user_id INT REFERENCES users(id) ON DELETE CASCADE,
+          summary TEXT
+      );
+    `);
+
+    // 4. Document chunks table
+    try {
+      await client.query(`
+        CREATE TABLE IF NOT EXISTS document_chunks (
+            id SERIAL PRIMARY KEY,
+            document_id INT REFERENCES documents(id) ON DELETE CASCADE,
+            chunk_index INT NOT NULL,
+            content TEXT NOT NULL,
+            embedding VECTOR(384)
+        );
+      `);
+    } catch (chunkErr) {
+      console.warn('document_chunks table warning:', chunkErr.message);
+    }
+
+    // 5. Chat history table
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS chat_history (
+          id SERIAL PRIMARY KEY,
+          query TEXT NOT NULL,
+          response TEXT NOT NULL,
+          model TEXT NOT NULL,
+          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          user_id INT REFERENCES users(id) ON DELETE CASCADE,
+          document_ids INT[]
+      );
+    `);
+
+    // 6. Vector Index
+    try {
+      await client.query(`
+        CREATE INDEX IF NOT EXISTS document_chunks_embedding_hnsw_idx 
+        ON document_chunks USING hnsw (embedding vector_cosine_ops);
+      `);
+    } catch (idxErr) {
+      console.warn('HNSW index warning:', idxErr.message);
+    }
+
     console.log('Database tables successfully initialized.');
   } catch (error) {
     console.error('Error during database schema initialization:', error);
