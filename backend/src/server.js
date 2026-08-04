@@ -28,6 +28,11 @@ async function connectWithRetry(retries = 5, delay = 3000) {
 // Establish DB connection
 connectWithRetry();
 
+// Root endpoint for Render health check & browser testing
+app.get('/', (req, res) => {
+  res.json({ status: 'online', service: 'PDFly Backend API', version: '1.0.0' });
+});
+
 // Mount Modular Router
 app.use('/api', apiRouter);
 
