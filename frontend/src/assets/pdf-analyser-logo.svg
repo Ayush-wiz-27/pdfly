@@ -1,0 +1,38 @@
+<svg viewBox="250 70 190 280" xmlns="http://www.w3.org/2000/svg" role="img">
+<title>PDF analyser logo</title>
+<desc>A minimalist logo showing a red document page with a folded top corner, three text lines, and a magnifying glass with a rounded handle positioned over the center of the page, containing a stream of binary digits inside the lens, with a soft drop shadow.</desc>
+<defs>
+<filter id="pageShadow" x="-40%" y="-40%" width="180%" height="180%">
+<feDropShadow dx="0" dy="6" stdDeviation="9" flood-color="#000000" flood-opacity="0.2"/>
+</filter>
+<filter id="glassShadow" x="-60%" y="-60%" width="220%" height="220%">
+<feDropShadow dx="0" dy="3" stdDeviation="4" flood-color="#000000" flood-opacity="0.25"/>
+</filter>
+<clipPath id="lensClip"><circle cx="365" cy="258" r="30"/></clipPath>
+</defs>
+
+<g filter="url(#pageShadow)">
+<path d="M270 90 L390 90 L420 120 L420 330 L270 330 Z" fill="#c11e2b"/>
+<path d="M390 90 L390 120 L420 120 Z" fill="#8f101a"/>
+</g>
+
+<g stroke="#f4e7db" stroke-linecap="round">
+<line x1="290" y1="150" x2="370" y2="150" stroke-width="6"/>
+<line x1="290" y1="174" x2="400" y2="174" stroke-width="6" opacity="0.85"/>
+<line x1="290" y1="198" x2="400" y2="198" stroke-width="6" opacity="0.85"/>
+<line x1="290" y1="222" x2="360" y2="222" stroke-width="6" opacity="0.7"/>
+</g>
+
+<g filter="url(#glassShadow)">
+<rect x="381" y="276" width="42" height="12" rx="6" fill="#1a1a1a" transform="rotate(45 381 276)"/>
+<circle cx="365" cy="258" r="30" fill="#ffffff"/>
+<g clip-path="url(#lensClip)">
+<text x="338" y="236" font-family="monospace" font-size="12" fill="#c11e2b">01101001</text>
+<text x="335" y="250" font-family="monospace" font-size="12" fill="#c11e2b">10110010</text>
+<text x="338" y="264" font-family="monospace" font-size="12" fill="#c11e2b">01011011</text>
+<text x="335" y="278" font-family="monospace" font-size="12" fill="#c11e2b">00110101</text>
+<text x="338" y="292" font-family="monospace" font-size="12" fill="#c11e2b">11010010</text>
+</g>
+<circle cx="365" cy="258" r="30" fill="none" stroke="#1a1a1a" stroke-width="6"/>
+</g>
+</svg>

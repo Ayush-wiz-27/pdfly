@@ -1,0 +1,163 @@
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
+@import "tailwindcss";
+
+:root {
+  --background: #07080c;
+  --foreground: #f1f5f9;
+  --card: rgba(255, 255, 255, 0.02);
+  --card-hover: rgba(255, 255, 255, 0.04);
+  --border: rgba(255, 255, 255, 0.06);
+  --radius: 0.75rem;
+  
+  --primary: #ef4444; /* Pure Red */
+  --primary-glow: rgba(239, 68, 68, 0.12); /* Red Glow */
+  --accent: #dc2626; /* Crimson Accent */
+  --accent-glow: rgba(220, 38, 38, 0.08);
+  --pink-glow: rgba(236, 72, 153, 0.03);
+}
+
+@theme {
+  --color-glass-light: rgba(255, 255, 255, 0.03);
+  --color-glass-medium: rgba(255, 255, 255, 0.08);
+  --color-glass-heavy: rgba(255, 255, 255, 0.15);
+  
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-border: var(--border);
+  --color-radius: var(--radius);
+
+  /* Remap existing Tailwind purple and indigo calls onto Red and Black tokens */
+  --color-purple-300: #fca5a5; /* light red */
+  --color-purple-400: #f87171; /* red-450 */
+  --color-purple-500: #ef4444; /* red */
+  --color-purple-600: #dc2626; /* dark red */
+  --color-purple-700: #b91c1c;
+  --color-purple-800: #991b1b;
+  --color-purple-900: #7f1d1d;
+  --color-purple-950: #020204; /* deep black */
+  
+  --color-indigo-300: #fca5a5;
+  --color-indigo-400: #f87171;
+  --color-indigo-500: #ef4444;
+  --color-indigo-600: #dc2626;
+  --color-indigo-700: #b91c1c;
+  --color-indigo-800: #991b1b;
+  --color-indigo-900: #7f1d1d;
+  --color-indigo-950: #020204; /* deep black */
+  
+  --color-amber-500: var(--primary);
+  --color-amber-400: var(--primary);
+}
+
+body {
+  background-color: var(--background);
+  color: var(--foreground);
+  min-height: 100vh;
+  overflow-x: hidden;
+  font-family: 'Plus Jakarta Sans', 'Inter', system-ui, -apple-system, sans-serif;
+  background-image: 
+    radial-gradient(at 0% 0%, var(--accent-glow) 0px, transparent 45%),
+    radial-gradient(at 50% 0%, var(--primary-glow) 0px, transparent 50%),
+    radial-gradient(at 100% 100%, var(--pink-glow) 0px, transparent 45%),
+    radial-gradient(at 100% 0%, var(--accent-glow) 0px, transparent 45%);
+  background-attachment: fixed;
+  letter-spacing: -0.015em;
+}
+
+/* Custom modern scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: rgba(15, 23, 42, 0.1);
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+/* Base border resets */
+* {
+  border-color: var(--border);
+}
+
+/* Glassmorphism panel styling overrides */
+.glass-panel {
+  background: rgba(8, 9, 15, 0.65);
+  backdrop-filter: blur(28px);
+  -webkit-backdrop-filter: blur(28px);
+  border: 1px solid var(--border);
+  border-radius: 1.5rem !important; /* Panel cards keep rounded-2xl curves */
+}
+
+.glass-panel-glow {
+  box-shadow: 
+    0 12px 40px 0 rgba(0, 0, 0, 0.35), 
+    0 0 0 1px var(--border),
+    0 0 30px 0 rgba(239, 68, 68, 0.03);
+}
+
+.glass-card {
+  background: var(--card);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--border);
+  border-radius: 1.25rem !important; /* Subcards use rounded-xl */
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.glass-card:hover {
+  background: var(--card-hover);
+  border-color: rgba(255, 255, 255, 0.12);
+  transform: translateY(-2px);
+  box-shadow: 
+    0 12px 30px -10px rgba(0, 0, 0, 0.4),
+    0 0 20px 0 rgba(239, 68, 68, 0.04);
+}
+
+.glass-input {
+  background: rgba(6, 7, 12, 0.6);
+  border: 1px solid var(--border);
+  border-radius: 0.75rem; /* standard smooth corners */
+  transition: all 0.2s ease-in-out;
+  color: #f8fafc;
+}
+
+.glass-input:focus {
+  border-color: rgba(239, 68, 68, 0.45);
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.12);
+  outline: none;
+  background: rgba(6, 7, 12, 0.8);
+}
+
+/* Custom Pill Buttons matching view portfolio */
+.pill-button-primary {
+  background-color: #ffffff;
+  color: #090b11;
+  font-weight: 600;
+  border-radius: 9999px !important;
+  transition: all 0.2s ease-in-out;
+}
+.pill-button-primary:hover {
+  background-color: rgba(255, 255, 255, 0.9);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(255, 255, 255, 0.15);
+}
+
+.pill-button-glass {
+  background: rgba(255, 255, 255, 0.03);
+  color: #f1f5f9;
+  border: 1px solid var(--border);
+  border-radius: 9999px !important;
+  transition: all 0.2s ease-in-out;
+}
+.pill-button-glass:hover {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.15);
+  transform: translateY(-1px);
+}

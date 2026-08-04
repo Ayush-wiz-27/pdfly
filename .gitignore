@@ -1,0 +1,22 @@
+# Dependencies
+node_modules/
+**/node_modules/
+
+# Build output
+dist/
+**/dist/
+
+# Environment variables
+.env
+**/.env
+
+# PDF files & Guides to exclude
+PDFly_Interview_Prep.pdf
+*.pdf
+*deployment*
+*guide*
+
+# Logs & OS metadata
+*.log
+.DS_Store
+Thumbs.db
