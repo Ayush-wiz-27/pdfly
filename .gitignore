@@ -9,12 +9,11 @@ dist/
 # Environment variables
 .env
 **/.env
+!.env.example
+!**/.env.example
 
-# PDF files & Guides to exclude
-PDFly_Interview_Prep.pdf
+# PDF files
 *.pdf
-*deployment*
-*guide*
 
 # Logs & OS metadata
 *.log

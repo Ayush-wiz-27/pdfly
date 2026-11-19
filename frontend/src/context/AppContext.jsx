@@ -41,7 +41,7 @@ function CombinedContextConsumer({ children }) {
   const uploadStatus = useUploadStatus();
   const chatHistory = useChatHistory();
 
-  // Combine logout logic to ensure state is immediately cleared across all contexts
+  // Clear all app state on logout
   const combinedLogout = () => {
     auth.logout();
     docSelection.setSelectedDocIds([]);

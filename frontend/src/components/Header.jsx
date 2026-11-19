@@ -5,7 +5,7 @@ import { useAppContext } from '../context/AppContext';
 export default function Header() {
   const { startNewChat, logout, currentUser } = useAppContext();
 
-  // Helper to extract first letter for user avatar representation
+  // Get user initial for avatar
   const getAvatarChar = () => {
     if (!currentUser || !currentUser.username) return 'U';
     return currentUser.username.charAt(0).toUpperCase();
@@ -24,7 +24,7 @@ export default function Header() {
 
       
       <div className="flex items-center gap-3">
-        {/* User Session Badge */}
+        {/* User info */}
         {currentUser && (
           <span className="text-xs font-semibold text-amber-300 font-mono truncate max-w-[200px]">
             Hello,{currentUser.username}

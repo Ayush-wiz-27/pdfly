@@ -9,18 +9,18 @@ import './App.css';
 function MainLayout() {
   return (
     <div className="flex h-screen text-slate-100 font-sans overflow-hidden">
-      {/* Sidebar Panel */}
+      {/* Sidebar */}
       <Sidebar />
 
-      {/* Main Workspace Panel */}
+      {/* Main content */}
       <main className="flex-1 flex flex-col h-full min-w-0">
         
-        {/* Workspace Header */}
+        {/* Header */}
         <Header />
 
-        {/* Workspace Body */}
+        {/* Chat area */}
         <div className="flex-1 flex flex-col overflow-hidden p-6">
-          {/* Chat Assistant Widget */}
+          {/* Chat widget */}
           <div className="flex-1 min-h-0 glass-panel rounded-2xl overflow-hidden flex flex-col">
             <ChatInterface />
           </div>

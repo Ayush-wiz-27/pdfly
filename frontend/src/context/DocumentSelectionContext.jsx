@@ -7,7 +7,7 @@ export function DocumentSelectionProvider({ children }) {
   const { authToken } = useAuth();
   const [selectedDocIds, setSelectedDocIds] = useState([]);
 
-  // Reset selected documents when logged out
+  // Clear selections on logout
   useEffect(() => {
     if (!authToken) {
       setSelectedDocIds([]);

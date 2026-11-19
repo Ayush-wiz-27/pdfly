@@ -6,7 +6,7 @@ const SidebarContext = createContext(null);
 export function SidebarProvider({ children }) {
   const { authToken } = useAuth();
   
-  // Sidebar state defaults to local storage preference, defaulting to false (expanded)
+  // Read saved sidebar preference from local storage
   const [isSidebarCollapsed, setIsSidebarCollapsedState] = useState(
     localStorage.getItem('sidebar_collapsed') === 'true'
   );
@@ -16,7 +16,7 @@ export function SidebarProvider({ children }) {
     localStorage.setItem('sidebar_collapsed', String(val));
   };
 
-  // Force the sidebar to expand (set to false) when a user signs in (authToken becomes active)
+  // Expand sidebar when user logs in
   useEffect(() => {
     if (authToken) {
       setIsSidebarCollapsedState(false);

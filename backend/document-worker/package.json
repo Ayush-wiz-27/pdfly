@@ -1,0 +1,20 @@
+{
+  "name": "pdfly-document-worker",
+  "version": "1.0.0",
+  "description": "PDFly Document Processing Worker Microservice",
+  "main": "src/worker.js",
+  "type": "module",
+  "scripts": {
+    "start": "node src/worker.js",
+    "dev": "node --watch src/worker.js"
+  },
+  "dependencies": {
+    "@aws-sdk/client-s3": "^3.1114.0",
+    "@xenova/transformers": "^2.17.2",
+    "axios": "^1.7.2",
+    "dotenv": "^16.4.5",
+    "kafkajs": "^2.2.4",
+    "pdf-parse": "^1.1.1",
+    "pg": "^8.12.0"
+  }
+}

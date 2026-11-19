@@ -32,7 +32,7 @@ export default function AuthScreen() {
 
       const { token, user, message } = response.data;
       
-      // Store session details in context
+      // Save session in context
       setAuthToken(token);
       setCurrentUser(user);
     } catch (err) {
@@ -54,7 +54,7 @@ export default function AuthScreen() {
   return (
     <div className="min-h-screen flex items-center justify-center p-4">
       <div className="glass-panel glass-panel-glow w-full max-w-sm rounded-2xl p-8 text-center relative overflow-hidden">
-        {/* Decorative backdrop glow spots */}
+        {/* Background glow */}
         <div className="absolute -top-10 -left-10 w-28 h-28 bg-amber-500/10 rounded-full blur-xl pointer-events-none"></div>
         <div className="absolute -bottom-10 -right-10 w-28 h-28 bg-amber-500/10 rounded-full blur-xl pointer-events-none"></div>
 
@@ -68,7 +68,7 @@ export default function AuthScreen() {
         </p>
 
         <form onSubmit={handleSubmit} className="mt-8 space-y-4 text-left">
-          {/* Username Input */}
+          {/* Username field */}
           <div>
             <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 pl-1">
               Username
@@ -86,7 +86,7 @@ export default function AuthScreen() {
             </div>
           </div>
 
-          {/* Password Input */}
+          {/* Password field */}
           <div>
             <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 pl-1">
               Password
@@ -125,7 +125,7 @@ export default function AuthScreen() {
           </button>
         </form>
 
-        {/* Toggle between Login and Signup */}
+        {/* Toggle auth mode */}
         <div className="mt-6 text-xs text-slate-400">
           {isSignUp ? (
             <p>

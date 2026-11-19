@@ -11,10 +11,9 @@ import {
 } from 'lucide-react';
 import { useAppContext } from '../context/AppContext';
 
-// Lightweight inline markdown formatter component to render structured content
+// Simple markdown renderer for bold text and inline code
 function renderInlineMarkdown(text) {
   if (!text) return '';
-  // Split on bold (**text**) and inline code (`code`) patterns
   const parts = text.split(/(\*\*.*?\*\*|`.*?`)/g);
 
   return parts.map((part, idx) => {
@@ -30,8 +29,6 @@ function renderInlineMarkdown(text) {
 
 function FormattedMarkdown({ content }) {
   if (!content) return null;
-
-  // Split by double line breaks to segment into paragraphs/blocks
   const blocks = content.split('\n\n');
 
   return (
@@ -40,7 +37,6 @@ function FormattedMarkdown({ content }) {
         const trimmed = block.trim();
         if (!trimmed) return null;
 
-        // 1. Heading Elements (e.g. ### Header)
         if (trimmed.startsWith('### ')) {
           return <h4 key={bIdx} className="text-sm font-bold text-slate-100 tracking-wide mt-3">{trimmed.slice(4)}</h4>;
         }
@@ -51,7 +47,6 @@ function FormattedMarkdown({ content }) {
           return <h2 key={bIdx} className="text-lg font-bold text-slate-100 tracking-wide mt-5">{trimmed.slice(2)}</h2>;
         }
 
-        // 2. List Elements (e.g. - Item or * Item or 1. Item)
         const lines = trimmed.split('\n');
         const isList = lines.every(line => {
           const t = line.trim();
@@ -62,7 +57,6 @@ function FormattedMarkdown({ content }) {
           return (
             <ul key={bIdx} className="list-disc pl-5 space-y-1.5 text-slate-200">
               {lines.map((line, lIdx) => {
-                // Remove list bullets/markers
                 const cleanLine = line.trim().replace(/^(-\s|\*\s|\d+\.\s)/, '');
                 return <li key={lIdx} className="leading-relaxed">{renderInlineMarkdown(cleanLine)}</li>;
               })}
@@ -70,7 +64,6 @@ function FormattedMarkdown({ content }) {
           );
         }
 
-        // 3. Regular Paragraphs
         return (
           <p key={bIdx} className="text-slate-200 leading-relaxed whitespace-pre-wrap">
             {renderInlineMarkdown(trimmed)}
@@ -89,7 +82,6 @@ export default function ChatInterface() {
     setSelectedModel,
     selectedDocIds,
     fetchChatHistory,
-    fetchDocuments,
     currentChat,
     setCurrentChat,
     uploading,
@@ -101,10 +93,8 @@ export default function ChatInterface() {
 
   const [query, setQuery] = useState('');
   const [loading, setLoading] = useState(false);
-  const [isInputExpanded, setIsInputExpanded] = useState(false);
   const chatEndRef = useRef(null);
 
-  // File Input and Dynamic Textarea refs
   const fileInputRef = useRef(null);
   const textareaRef = useRef(null);
 
@@ -112,14 +102,12 @@ export default function ChatInterface() {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [currentChat]);
 
-  // Adjust textarea height dynamically based on multi-line text input
   useEffect(() => {
     if (textareaRef.current) {
       textareaRef.current.style.height = 'auto';
       const scrollHeight = textareaRef.current.scrollHeight;
       const nextHeight = Math.min(scrollHeight, 120);
       textareaRef.current.style.height = `${nextHeight}px`;
-      setIsInputExpanded(scrollHeight > 36);
     }
   }, [query]);
 
@@ -129,7 +117,7 @@ export default function ChatInterface() {
 
     setLoading(true);
     
-    // Add user query message instantly to local chat
+    // Show user message immediately in chat
     const userMessage = { role: 'user', content: query };
     setCurrentChat(prev => ({
       ...prev,
@@ -140,31 +128,65 @@ export default function ChatInterface() {
     setQuery('');
 
     try {
-      const response = await api.post('/query', {
+      const targetDocId = selectedDocIds.length > 0 ? selectedDocIds[0] : null;
+      const endpoint = targetDocId ? `/documents/${targetDocId}/query` : '/query';
+
+      // Submit the query
+      const submitRes = await api.post(endpoint, {
         query: originalQuery,
         model: selectedModel,
-        documentIds: selectedDocIds
+        documentId: targetDocId
       });
 
-      const { response: responseText, retrievedChunks } = response.data;
+      const { queryId } = submitRes.data;
 
-      // Add assistant response to the message feed along with context citations
-      setCurrentChat(prev => ({
-        messages: [...prev.messages, { role: 'assistant', content: responseText }],
-        retrievedChunks: retrievedChunks || []
-      }));
+      // Poll until complete or failed
+      let isDone = false;
+      let attempts = 0;
+      const maxAttempts = 60; // 2 minute timeout
 
-      // Refresh side navigation logs to include this Q&A query
-      fetchChatHistory();
+      while (!isDone && attempts < maxAttempts) {
+        attempts++;
+        await new Promise(r => setTimeout(r, 1500));
+
+        try {
+          const pollRes = await api.get(`/queries/${queryId}`);
+          const { status: qStatus, answer, error: qError } = pollRes.data;
+
+          if (qStatus === 'COMPLETED') {
+            isDone = true;
+            setCurrentChat(prev => ({
+              ...prev,
+              messages: [...prev.messages, { role: 'assistant', content: answer }]
+            }));
+            fetchChatHistory();
+          } else if (qStatus === 'FAILED') {
+            isDone = true;
+            setCurrentChat(prev => ({
+              ...prev,
+              messages: [
+                ...prev.messages,
+                { role: 'assistant', content: `⚠️ Query execution failed: ${qError || 'Unknown error'}` }
+              ]
+            }));
+          }
+        } catch (pollErr) {
+          console.warn('Query status poll error:', pollErr.message);
+        }
+      }
+
+      if (!isDone) {
+        throw new Error('Query request timed out while waiting for response.');
+      }
     } catch (error) {
-      console.error('Query error:', error);
+      console.error('Query submission error:', error);
       setCurrentChat(prev => ({
         ...prev,
         messages: [
           ...prev.messages,
           { 
             role: 'assistant', 
-            content: `⚠️ Failed to get a response from the vector assistant: ${error.response?.data?.error || error.message}` 
+            content: `⚠️ Failed to get a response: ${error.response?.data?.error || error.message}` 
           }
         ]
       }));
@@ -180,7 +202,6 @@ export default function ChatInterface() {
     }
   };
 
-  // PDF File Upload Handler utilizing shared helper
   const handleFileChange = (e) => {
     e.preventDefault();
     if (!e.target.files || !e.target.files[0]) return;
@@ -190,9 +211,9 @@ export default function ChatInterface() {
 
   return (
     <div className="flex-1 flex flex-col h-full overflow-hidden relative">
-      {/* Messages Console */}
+      {/* Chat container */}
       <div className="flex-1 flex min-h-0 overflow-hidden">
-        {/* Messages Feed */}
+        {/* Message list */}
         <div className="flex-1 overflow-y-auto p-6 space-y-4">
           {currentChat.messages.length === 0 ? (
             <div className="h-full flex flex-col items-center justify-center text-center p-6 space-y-4">
@@ -212,7 +233,7 @@ export default function ChatInterface() {
                     key={index}
                     className={`flex gap-3 max-w-4xl ${isUser ? 'ml-auto flex-row-reverse' : 'mr-auto'}`}
                   >
-                    {/* User / Agent Avatar */}
+                    {/* Avatar */}
                     <div className={`w-8 h-8 rounded-full shrink-0 flex items-center justify-center text-xs font-bold font-mono shadow-md border ${
                       isUser 
                         ? 'bg-purple-600/20 border-purple-500/30 text-purple-300' 
@@ -221,7 +242,7 @@ export default function ChatInterface() {
                       {isUser ? 'U' : 'AI'}
                     </div>
 
-                    {/* Chat Bubble */}
+                    {/* Message bubble */}
                     <div className={`rounded-2xl p-3 text-sm leading-relaxed max-w-[85%] ${
                       isUser 
                         ? 'bg-gradient-to-br from-purple-600 to-indigo-600 text-white shadow-lg shadow-purple-600/10' 
@@ -255,15 +276,15 @@ export default function ChatInterface() {
         </div>
       </div>
 
-      {/* Uploading Status Banner */}
+      {/* Upload progress banner */}
       {uploading && (
         <div className="mx-4 mb-2 p-2 bg-purple-950/20 border border-purple-500/20 rounded-xl flex items-center gap-2 text-xs text-purple-300 z-10 shadow-sm animate-pulse">
           <Loader2 className="w-3.5 h-3.5 animate-spin text-purple-400" />
-          <span>Processing...</span>
+          <span>Processing PDF in background...</span>
         </div>
       )}
 
-      {/* Ingestion Completion/Error status notification banners */}
+      {/* Status banner */}
       {uploadStatus && (
         <div className={`mx-4 mb-2 p-2.5 rounded-xl border text-xs flex items-center justify-between z-10 shadow-md ${
           uploadStatus === 'success'
@@ -287,7 +308,7 @@ export default function ChatInterface() {
         </div>
       )}
 
-      {/* Query Search Bar */}
+      {/* Input bar */}
       <div className="p-4 bg-gradient-to-t from-slate-950/60 to-transparent border-t border-white/5 z-10">
         <form 
           onSubmit={handleSubmit} 
@@ -304,23 +325,7 @@ export default function ChatInterface() {
             className="flex-1 bg-transparent border-none text-sm text-slate-200 placeholder-slate-500 focus:outline-none resize-none min-h-[32px] max-h-[120px] py-1.5 overflow-y-auto"
           />
           
-          {/* Controls inline on the right side of the textarea */}
           <div className="flex items-center gap-2 pr-1 shrink-0">
-            {/* Model Dropdown */}
-            <select
-              value={selectedModel}
-              onChange={(e) => setSelectedModel(e.target.value)}
-              className="bg-slate-900/60 hover:bg-slate-800/80 text-slate-300 hover:text-white border border-white/10 rounded-full px-2.5 py-1 text-[10px] focus:outline-none max-w-[125px] transition-colors font-sans truncate cursor-pointer"
-              title="Select AI Model"
-            >
-              {models.map(model => (
-                <option key={model.id} value={model.id} className="bg-slate-950 text-slate-200 text-xs">
-                  {model.name.replace(' (Free)', '')}
-                </option>
-              ))}
-            </select>
-
-            {/* Plus Upload Button */}
             <button
               type="button"
               onClick={() => fileInputRef.current.click()}
@@ -335,7 +340,6 @@ export default function ChatInterface() {
               )}
             </button>
 
-            {/* Send Button */}
             <button
               type="submit"
               disabled={loading || !query.trim()}

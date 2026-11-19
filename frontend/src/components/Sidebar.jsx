@@ -17,15 +17,15 @@ import {
 import { useAppContext } from '../context/AppContext';
 import logoUrl from '../assets/pdf-analyser-logo.svg';
 
-// Helper function to group individual logs into threads by target document context
+// Group chat history logs into threads by document
 function groupQueriesByContext(historyLogs, availableDocs) {
   const groups = {};
 
-  // Sort logs chronologically (oldest to newest) to preserve the query/response order inside each thread
+  // Sort logs oldest to newest so conversation flows naturally
   const sortedLogs = [...historyLogs].sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
 
   sortedLogs.forEach(log => {
-    // Standardize doc_ids key (sort them to ensure same set matches)
+    // Sort document IDs so the group key is consistent
     const docIds = Array.isArray(log.document_ids) ? [...log.document_ids].sort((x, y) => x - y) : [];
     const groupKey = docIds.length > 0 ? docIds.join(',') : 'global';
 
@@ -50,13 +50,13 @@ function groupQueriesByContext(historyLogs, availableDocs) {
       };
     }
 
-    // Append dialog turns to the group thread
+    // Add user query and assistant response to thread
     groups[groupKey].messages.push({ role: 'user', content: log.query });
     groups[groupKey].messages.push({ role: 'assistant', content: log.response });
     groups[groupKey].lastQueryTime = log.created_at;
   });
 
-  // Sort groups by last query time (newest active thread first)
+  // Show most recent threads at the top
   return Object.values(groups).sort((a, b) => new Date(b.lastQueryTime) - new Date(a.lastQueryTime));
 }
 
@@ -78,12 +78,12 @@ export default function Sidebar() {
     uploadFile
   } = useAppContext();
 
-  // Accordion Menu States
+  // Section toggle states
   const [isDocsOpen, setIsDocsOpen] = useState(true);
   const [isQueriesOpen, setIsQueriesOpen] = useState(true);
   const sidebarFileInputRef = useRef(null);
 
-  // Group the queries dynamically
+  // Organize chat logs into context threads
   const queryGroups = groupQueriesByContext(chatHistory, documents);
 
   const handleSidebarFileChange = (e) => {
@@ -110,11 +110,11 @@ export default function Sidebar() {
   };
 
   const handleDeleteDocument = async (id) => {
-    if (!window.confirm('Are you sure you want to delete this document? This will remove all text chunks and vectors.')) {
+    if (!window.confirm('Are you sure you want to delete this document?')) {
       return;
     }
     try {
-      // Execute deletion request directly with Axios
+      // Delete document
       await api.delete(`/documents/${id}`);
       setDocuments(prev => prev.filter(doc => doc.id !== id));
       setSelectedDocIds(prev => prev.filter(docId => docId !== id));
@@ -128,7 +128,7 @@ export default function Sidebar() {
       return;
     }
     try {
-      // Execute history clear directly with Axios
+      // Clear all chat logs
       await api.delete('/chat-history');
       setChatHistory([]);
       setActiveLogId(null);
@@ -140,7 +140,7 @@ export default function Sidebar() {
 
   const handleSelectHistoryGroup = (group) => {
     setActiveLogId(group.key);
-    // Align context selection filters to matching document list of this thread
+    // Select documents associated with this chat thread
     setSelectedDocIds(group.docIds);
     setCurrentChat({
       messages: group.messages,
@@ -157,7 +157,7 @@ export default function Sidebar() {
     <aside className={`border-r border-white/5 flex flex-col h-full bg-slate-950/40 backdrop-blur-xl transition-all duration-700 ease-in-out shrink-0 overflow-hidden ${
       isSidebarCollapsed ? 'w-16' : 'w-80'
     }`}>
-      {/* Sidebar Header */}
+      {/* Header */}
       {isSidebarCollapsed ? (
         <div className="p-3.5 border-b border-white/5 flex items-center justify-center">
           <button
@@ -188,7 +188,7 @@ export default function Sidebar() {
         </div>
       )}
       {isSidebarCollapsed ? (
-        /* Collapsed State: Category Icons Stack */
+        /* Collapsed view */
         <div className="flex-1 flex flex-col justify-center items-center gap-6 pb-19">
           <button
               onClick={() => sidebarFileInputRef.current.click()}
@@ -202,7 +202,7 @@ export default function Sidebar() {
                 <Plus className="w-4 h-4 text-slate-900" />
               )}
           </button>
-            {/* Document Category Icon */}
+            {/* Documents */}
           <button
             onClick={() => setIsSidebarCollapsed(false)}
             className="p-3 rounded-xl bg-purple-500/10 text-purple-400 border border-purple-500/20 hover:bg-purple-500/20 transition-all cursor-pointer flex items-center justify-center relative group"
@@ -216,7 +216,7 @@ export default function Sidebar() {
             )}
           </button>
 
-          {/* History Category Icon */}
+          {/* History */}
           <button
             onClick={() => setIsSidebarCollapsed(false)}
             className="p-3 rounded-xl bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 hover:bg-indigo-500/20 transition-all cursor-pointer flex items-center justify-center relative group"
@@ -231,7 +231,7 @@ export default function Sidebar() {
           </button>
         </div>
       ) : (
-        /* Expanded State: Normal Documents and Query Logs explorer list */
+        /* Expanded view */
         <div className="flex-1 overflow-y-auto p-4 space-y-6">
           {/* Add Document button */}
           <div className="mb-2 pl-1 pr-1">
@@ -304,9 +304,11 @@ export default function Sidebar() {
                               <p className="text-xs font-medium text-slate-200 truncate" title={doc.filename}>
                                 {doc.filename}
                               </p>
-                              <p className="text-[10px] text-slate-400 font-mono mt-0.5">
-                                {doc.chunk_count} chunks • {formatSize(doc.char_count)}
-                              </p>
+                              {doc.status && doc.status !== 'READY' && (
+                                <p className="text-[10px] text-amber-400 font-sans mt-0.5 capitalize">
+                                  {doc.status.toLowerCase().replace('_', ' ')}
+                                </p>
+                              )}
                             </div>
                           </div>
 
@@ -394,7 +396,7 @@ export default function Sidebar() {
         </div>
       )}
       
-      {/* Sidebar Footer - Stats Card */}
+      {/* Footer stats */}
       {!isSidebarCollapsed && (
         <div className="p-4 border-t border-white/5 bg-slate-950/20 shrink-0">
           <div className="glass-card p-3.5 border border-white/5 rounded-2xl space-y-3">
